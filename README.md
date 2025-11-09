@@ -1,4 +1,4 @@
-# 🍓 Fruit Freshness Detection using CNN  
+# 🍓 Fruit Freshness Detection using CNN with ResNet50 
 
 A deep learning-powered system that classifies fruit images as **Fresh** or **Spoiled**.  
 This application allows you to drag & drop an image of a fruit and get an instant freshness prediction — designed for real-world use in warehouse conveyor-belt setups.
