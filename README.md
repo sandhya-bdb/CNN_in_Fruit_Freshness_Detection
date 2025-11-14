@@ -52,15 +52,17 @@ Drag or upload a fruit image (supported formats: JPG, PNG)
 
 The interface will show whether the fruit is Fresh or Spoiled
 # 📂 Project Structure
+```bash
 fruit-freshness-detection/
 │
-├── app.py                    # Streamlit front-end  
-├── model_helper.py           # Model definition & prediction logic  
-├── model/  
-│   └── saved_model.pth       # Trained model weights  
-├── data/                     # (Optional) raw/train/val/test splits  
-├── requirements.txt          # Python dependencies  
-└── README.md                 
+├── app.py # Streamlit front-end
+├── model_helper.py # Model definition & prediction logic
+├── model/
+│ └── saved_model.pth # Trained model weights
+├── data/ # (Optional) raw/train/val/test splits
+├── requirements.txt # Python dependencies
+└── README.md # Project overview
+```
 # 📊 Training & Validation Overview
 Built a CNN from scratch (before using transfer learning) for experimentation.
 
