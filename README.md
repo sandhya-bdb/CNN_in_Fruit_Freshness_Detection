@@ -64,15 +64,15 @@ fruit-freshness-detection/
 └── README.md # Project overview
 ```
 # 📊 Training & Validation Overview
-Built a CNN from scratch (before using transfer learning) for experimentation.
+- Built baseline CNN models before adopting transfer learning with ResNet50.
 
-Applied data augmentation: random flip, rotation, color jitter, resizing, etc.
+- Applied data augmentation (random flip, rotation, color jitter, resize) to improve generalisation.
 
-Split data into training, validation, and test sets to monitor generalisation.
+- Partitioned data into training, validation, and test sets.
 
-Visualised representative images to understand class distribution and data quality.
+- Visualised representative samples to understand class balance and data quality.
 
-Iterated over different numbers of epochs to optimise performance and avoid overfitting.
+- Tuned hyperparameters (learning rate, epochs, dropout) to avoid overfitting and maximise validation performance.
 # 🛠️ Next Steps & Enhancements
 Integrate with actual conveyor-belt camera feeds for live inference.
 
