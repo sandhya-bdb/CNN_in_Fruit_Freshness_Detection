@@ -5,7 +5,6 @@ from PIL import Image
 from pathlib import Path
 
 
-trained_model = None
 class_names = ['Fresh', 'Spoiled']
 
 
@@ -33,32 +32,32 @@ class FruitClassifierResNet(nn.Module):
         return x
 
 
-def predict(image_path):
-    image = Image.open(image_path).convert("RGB")
+def _load_model():
+    base_dir = Path(__file__).resolve().parent
+    model_path = base_dir / "model" / "saved_model.pth"
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model weights not found at: {model_path}")
+
+    model = FruitClassifierResNet(num_classes=2)
+    state_dict = torch.load(model_path, map_location=torch.device('cpu'))
+    model.load_state_dict(state_dict)
+    model.eval()
+    return model
+
+
+def predict(image, model):
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
     ])
-    image_tensor = transform(image).unsqueeze(0)
-
-    global trained_model
-
-    if trained_model is None:
-        base_dir = Path(__file__).resolve().parent
-        model_path = base_dir / "model" / "saved_model.pth"
-
-        print("Loading model from:", model_path)
-        print("Exists:", model_path.exists())
-
-        trained_model = FruitClassifierResNet(num_classes=2)
-        # Use map_location to load to CPU
-        state_dict = torch.load(model_path, map_location=torch.device('cpu'))
-        trained_model.load_state_dict(state_dict)
-        trained_model.eval()
+    image_tensor = transform(image.convert("RGB")).unsqueeze(0)
 
     with torch.no_grad():
-        output = trained_model(image_tensor)
+        output = model(image_tensor)
+        probabilities = torch.softmax(output, dim=1)
         _, predicted_class = torch.max(output, 1)
-        return class_names[predicted_class.item()]
+        confidence = probabilities[0, predicted_class.item()].item()
+        return class_names[predicted_class.item()], confidence
