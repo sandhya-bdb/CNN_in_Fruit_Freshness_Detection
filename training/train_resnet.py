@@ -148,6 +148,8 @@ def main():
     parser.add_argument("--output-dir", default="artifacts/minimal_run")
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--image-size", type=int, default=224)
+    parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--dropout", type=float, default=0.4)
@@ -177,7 +179,7 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     base_dataset = datasets.ImageFolder(root=args.dataset_dir)
-    train_tf, eval_tf = get_transforms(224, strong=strong_aug)
+    train_tf, eval_tf = get_transforms(args.image_size, strong=strong_aug)
 
     train_idx, val_idx, test_idx = stratified_split(base_dataset.targets, val_split, test_split, args.seed)
     train_ds = TransformSubset(base_dataset, train_idx, train_tf)
@@ -185,9 +187,9 @@ def main():
     test_ds = TransformSubset(base_dataset, test_idx, eval_tf)
 
     pin = torch.cuda.is_available()
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=pin)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=pin)
-    test_loader = DataLoader(test_ds, batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=pin)
+    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=pin)
+    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=pin)
+    test_loader = DataLoader(test_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=pin)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = FruitClassifierResNet(len(base_dataset.classes), args.dropout, unfreeze_layer4).to(device)
@@ -227,15 +229,19 @@ def main():
             break
 
     model.load_state_dict(torch.load(output_dir / "best_model.pth", map_location=device))
+    val_loss, val_acc = run_epoch(model, val_loader, criterion, device)
     test_loss, test_acc = run_epoch(model, test_loader, criterion, device)
 
     metrics = {
         "best_epoch": best_epoch,
         "best_val_acc": best_val_acc,
+        "val_acc": val_acc,
+        "val_loss": val_loss,
         "test_acc": test_acc,
         "test_loss": test_loss,
         "classes": base_dataset.classes,
         "preset": args.preset,
+        "config": vars(args),
         "history": history,
     }
 

@@ -1,84 +1,88 @@
-# 🍓 Fruit Freshness Detection using CNN with ResNet50 
+# Fruit Freshness Detection (CNN + ResNet50)
 
-A deep learning-powered system that classifies fruit images as **Fresh** or **Spoiled**.  
-This application allows you to drag & drop an image of a fruit and get an instant freshness prediction — designed for real-world use in warehouse conveyor-belt setups.
+A deep-learning project for classifying fruit images as **Fresh** or **Spoiled**.
 
----
+## Overview
+- Model: ResNet50 transfer learning (ImageNet pretrained)
+- Task: Binary freshness classification
+- Interface: Streamlit app for image upload + prediction
+- Training: notebook workflow + minimal script-based trainer
 
-## 🚀 Project Overview  
-In modern fruit-processing warehouses, quality control is critical. This project aims to automate the inspection process using high-speed cameras and convolutional neural networks (CNNs).  
-- Images of fruit crates are captured in real time as they move on conveyor belts.  
-- A CNN model classifies each fruit image as “Fresh” or “Spoiled”.  
-- The system streamlines inspection, reduces human error, and helps minimise wastage.
-
----
-
-## 🧠 Model Details  
-- **Base architecture**: ResNet50 (pre-trained on ImageNet)  
-- **Customisation**:  
-  - Freeze all layers except `layer4` + the final fully connected layer  
-  - Replace the final FC layer with `Dropout(0.2)` + `Linear(in_features, num_classes)`  
-- **Classes**: `Fresh`, `Spoiled`  
-- **Training data**: ~16,000 images  
-- **Target categories**: 16 fruit-types (e.g., Banana, Lemon, Lulo, Mango, Orange, Strawberry, Tamarillo, Tomato…)  
-- **Performance**: > 90 % accuracy on validation set  
-
----
-
-## 🧰 Technology Stack  
-- Python 3.x  
-- PyTorch (for model definition & training)  
-- torchvision (for data loaders & transforms)  
-- PIL (for image handling)  
-- Streamlit (for front-end drag & drop app)  
-
-
----
-
-## ⚙️ Setup Instructions  
-
-1. **Clone this repository**  
-   ```bash
-   git clone https://github.com/your-username/fruit-freshness-detection.git
-   cd fruit-freshness-detection
-## ⚙️ Install dependencies
-pip install -r requirements.txt
-## Ensure model weights are placed
- Save your trained weights file as: model/saved_model.pth
-## Run the Streamlit app
- streamlit run app.py
-## Use the app
-Drag or upload a fruit image (supported formats: JPG, PNG)
-
-The interface will show whether the fruit is Fresh or Spoiled
-# 📂 Project Structure
-```bash
-fruit-freshness-detection/
-│
-├── app.py # Streamlit front-end
-├── model_helper.py # Model definition & prediction logic
-├── model/
-│ └── saved_model.pth # Trained model weights
-├── data/ # (Optional) raw/train/val/test splits
-├── requirements.txt # Python dependencies
-└── README.md # Project overview
+## Project Structure
+```text
+CNN_in_Fruit_Freshness_Detection/
+├── Streamlit/
+│   ├── app.py
+│   ├── model_helper.py
+│   └── model/saved_model.pth
+├── notebook/model.ipynb
+├── training/train_resnet.py
+├── requirement.txt
+├── requirements.txt
+└── README.md
 ```
-# 📊 Training & Validation Overview
-- Built baseline CNN models before adopting transfer learning with ResNet50.
 
-- Applied data augmentation (random flip, rotation, color jitter, resize) to improve generalisation.
+## Local Setup (Streamlit Inference)
+```bash
+git clone https://github.com/sandhya-bdb/CNN_in_Fruit_Freshness_Detection.git
+cd CNN_in_Fruit_Freshness_Detection
+python3 -m pip install -r requirements.txt
+cd Streamlit
+streamlit run app.py
+```
 
-- Partitioned data into training, validation, and test sets.
+## Minimal Training Script
+Run from repository root:
 
-- Visualised representative samples to understand class balance and data quality.
+```bash
+python3 training/train_resnet.py \
+  --dataset-dir "/absolute/path/to/FRUIT-16K" \
+  --output-dir "artifacts/minimal_run" \
+  --preset realistic_eval \
+  --epochs 8
+```
 
-- Tuned hyperparameters (learning rate, epochs, dropout) to avoid overfitting and maximise validation performance.
-# 🛠️ Next Steps & Enhancements
-Integrate with actual conveyor-belt camera feeds for live inference.
+### Presets
+- `tuned`: More accuracy-oriented defaults
+- `realistic_eval`: Harder split + stronger regularization to reduce overly optimistic results
 
-Extend the model to classify multiple fruits in a single image / crate.
+### Training Output
+The script writes:
+- `best_model.pth`
+- `metrics.json`
 
-Deploy on edge-devices (e.g., Jetson Nano, Raspberry Pi) for real-time on-site use.
+in the chosen `--output-dir`.
 
-Explore further model regularisation (batch-norm, dropout) and advanced architectures for improved accuracy.
+## Google Colab Quick Run
+1. Enable GPU: `Runtime` -> `Change runtime type` -> `T4 GPU`
+2. Run cells:
 
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+```bash
+%cd /content
+!git clone https://github.com/sandhya-bdb/CNN_in_Fruit_Freshness_Detection.git
+%cd /content/CNN_in_Fruit_Freshness_Detection
+!pip install -r requirements.txt
+```
+
+```bash
+!python training/train_resnet.py \
+  --dataset-dir "/content/drive/MyDrive/datasets/FRUIT-16K" \
+  --output-dir "/content/drive/MyDrive/CNN_outputs/minimal_run" \
+  --preset realistic_eval \
+  --epochs 8
+```
+
+Check metrics:
+
+```bash
+!cat /content/drive/MyDrive/CNN_outputs/minimal_run/metrics.json
+```
+
+## Notes
+- `requirements.txt` is the primary dependency file.
+- `requirement.txt` is kept for backward compatibility.
