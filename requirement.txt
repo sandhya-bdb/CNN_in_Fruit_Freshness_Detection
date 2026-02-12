@@ -1,3 +1,5 @@
-# Backward-compatible placeholder.
-# Use requirements.txt for installation:
-#   pip install -r requirements.txt
+Python == 3.12.2
+streamlit==1.32.0
+Pillow==10.3.0
+torch==2.9.0
+torchvision==0.24.0

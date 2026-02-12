@@ -17,11 +17,11 @@ In modern fruit-processing warehouses, quality control is critical. This project
 - **Base architecture**: ResNet50 (pre-trained on ImageNet)  
 - **Customisation**:  
   - Freeze all layers except `layer4` + the final fully connected layer  
-  - Replace the final FC layer with `Dropout(0.4)` + `Linear(in_features, num_classes)`  
+  - Replace the final FC layer with `Dropout(0.2)` + `Linear(in_features, num_classes)`  
 - **Classes**: `Fresh`, `Spoiled`  
 - **Training data**: ~16,000 images  
 - **Target categories**: 16 fruit-types (e.g., Banana, Lemon, Lulo, Mango, Orange, Strawberry, Tamarillo, Tomato…)  
-- **Performance**: tuned runs can reach ~99% validation accuracy  
+- **Performance**: > 90 % accuracy on validation set  
 
 ---
 
@@ -39,82 +39,29 @@ In modern fruit-processing warehouses, quality control is critical. This project
 
 1. **Clone this repository**  
    ```bash
-   git clone https://github.com/sandhya-bdb/CNN_in_Fruit_Freshness_Detection.git
-   cd CNN_in_Fruit_Freshness_Detection
-   ```
+   git clone https://github.com/your-username/fruit-freshness-detection.git
+   cd fruit-freshness-detection
+## ⚙️ Install dependencies
+pip install -r requirements.txt
+## Ensure model weights are placed
+ Save your trained weights file as: model/saved_model.pth
+## Run the Streamlit app
+ streamlit run app.py
+## Use the app
+Drag or upload a fruit image (supported formats: JPG, PNG)
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Ensure model weights are placed**
-   - Save trained weights as `Streamlit/model/saved_model.pth`
-
-4. **Run the Streamlit app**
-   ```bash
-   cd Streamlit
-   streamlit run app.py
-   ```
-
-5. **Use the app**
-   - Upload a fruit image (`.jpg`, `.jpeg`, `.png`)
-   - The app returns the predicted class (`Fresh` or `Spoiled`) and confidence score
-
-## 🧪 Reproducible Tuned Training
-Use the new script-based pipeline to reproduce and improve your tuned setup (instead of relying only on notebook state).
-
-1. **Train with tuned defaults (`lr=1e-5`, `dropout=0.4`)**
-   ```bash
-   python training/train_resnet.py \
-     --dataset-dir /path/to/FRUIT-16K \
-     --output-dir artifacts/tuned_run \
-     --epochs 10 \
-     --batch-size 32 \
-     --lr 1e-5 \
-     --dropout 0.4 \
-     --weight-decay 1e-4
-   ```
-
-2. **Train with stricter realistic evaluation (recommended when 99% looks inflated)**
-   ```bash
-   python training/train_resnet.py \
-     --dataset-dir /path/to/FRUIT-16K \
-     --output-dir artifacts/realistic_eval \
-     --preset realistic_eval \
-     --epochs 8
-   ```
-
-3. **Run random-search tuning**
-   ```bash
-   python training/tune_resnet.py \
-     --dataset-dir /path/to/FRUIT-16K \
-     --output-dir tuning_runs \
-     --trials 8 \
-     --epochs 8 \
-     --preset realistic_eval
-   ```
-
-4. **Training outputs**
-   - `best_model.pth`: best checkpoint by validation accuracy
-   - `metrics.json`: epoch history + val/test accuracy
-   - `classes.json`: class index order
-   - `tuning_summary.json`: sorted trial leaderboard (for tuner runs)
-
+The interface will show whether the fruit is Fresh or Spoiled
 # 📂 Project Structure
 ```bash
-CNN_in_Fruit_Freshness_Detection/
+fruit-freshness-detection/
 │
-├── Streamlit/
-│   ├── app.py                    # Streamlit front-end
-│   ├── model_helper.py           # Model definition & prediction logic
-│   └── model/saved_model.pth     # Trained model weights
-├── notebook/model.ipynb          # Training workflow notebook
-├── training/
-│   ├── train_resnet.py           # Reproducible tuned training pipeline
-│   └── tune_resnet.py            # Random-search hyperparameter tuning
-├── requirements.txt              # Python dependencies
-└── README.md                     # Project overview
+├── app.py # Streamlit front-end
+├── model_helper.py # Model definition & prediction logic
+├── model/
+│ └── saved_model.pth # Trained model weights
+├── data/ # (Optional) raw/train/val/test splits
+├── requirements.txt # Python dependencies
+└── README.md # Project overview
 ```
 # 📊 Training & Validation Overview
 - Built baseline CNN models before adopting transfer learning with ResNet50.
@@ -134,3 +81,4 @@ Extend the model to classify multiple fruits in a single image / crate.
 Deploy on edge-devices (e.g., Jetson Nano, Raspberry Pi) for real-time on-site use.
 
 Explore further model regularisation (batch-norm, dropout) and advanced architectures for improved accuracy.
+
