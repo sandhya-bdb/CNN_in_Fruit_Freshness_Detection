@@ -110,6 +110,47 @@ def stratified_split(targets, val_split=0.2, test_split=0.2, seed=42):
     return train_idx, val_idx, test_idx
 
 
+def grouped_split(dataset, prefix_len=8, val_split=0.2, test_split=0.2, seed=42):
+    """
+    Splits the dataset ensuring that images with the same prefix (e.g., same fruit) 
+    are kept in the same split to avoid data leakage.
+    """
+    if val_split + test_split >= 1.0:
+        raise ValueError("val_split + test_split must be < 1.0")
+
+    rng = random.Random(seed)
+    
+    # Group indices by prefix
+    groups = defaultdict(list)
+    for i, (path, _) in enumerate(dataset.samples):
+        filename = Path(path).name
+        # Use first `prefix_len` characters to group images of the same fruit together
+        prefix = filename[:prefix_len]
+        groups[prefix].append(i)
+        
+    group_keys = list(groups.keys())
+    rng.shuffle(group_keys)
+    
+    n_groups = len(group_keys)
+    n_test = int(n_groups * test_split)
+    n_val = int(n_groups * val_split)
+    
+    test_groups = group_keys[:n_test]
+    val_groups = group_keys[n_test:n_test + n_val]
+    train_groups = group_keys[n_test + n_val:]
+    
+    train_idx, val_idx, test_idx = [], [], []
+    for g in test_groups: test_idx.extend(groups[g])
+    for g in val_groups: val_idx.extend(groups[g])
+    for g in train_groups: train_idx.extend(groups[g])
+        
+    rng.shuffle(train_idx)
+    rng.shuffle(val_idx)
+    rng.shuffle(test_idx)
+    
+    return train_idx, val_idx, test_idx
+
+
 
 def run_epoch(model, loader, criterion, device, optimizer=None):
     train_mode = optimizer is not None
@@ -155,6 +196,7 @@ def main():
     parser.add_argument("--dropout", type=float, default=0.4)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--preset", choices=["tuned", "realistic_eval"], default="realistic_eval")
+    parser.add_argument("--group-by-prefix", type=int, default=0, help="Length of filename prefix to group by. 0 disables grouping.")
     args = parser.parse_args()
 
     val_split = 0.15
@@ -181,7 +223,12 @@ def main():
     base_dataset = datasets.ImageFolder(root=args.dataset_dir)
     train_tf, eval_tf = get_transforms(args.image_size, strong=strong_aug)
 
-    train_idx, val_idx, test_idx = stratified_split(base_dataset.targets, val_split, test_split, args.seed)
+    if args.group_by_prefix > 0:
+        print(f"Using grouped split by prefix length: {args.group_by_prefix}")
+        train_idx, val_idx, test_idx = grouped_split(base_dataset, args.group_by_prefix, val_split, test_split, args.seed)
+    else:
+        print("Using standard stratified split")
+        train_idx, val_idx, test_idx = stratified_split(base_dataset.targets, val_split, test_split, args.seed)
     train_ds = TransformSubset(base_dataset, train_idx, train_tf)
     val_ds = TransformSubset(base_dataset, val_idx, eval_tf)
     test_ds = TransformSubset(base_dataset, test_idx, eval_tf)
@@ -241,6 +288,7 @@ def main():
         "test_loss": test_loss,
         "classes": base_dataset.classes,
         "preset": args.preset,
+        "group_by_prefix": args.group_by_prefix,
         "config": vars(args),
         "history": history,
     }
